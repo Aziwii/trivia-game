@@ -330,7 +330,16 @@
     errName.textContent = "";
     errEmail.textContent = "";
 
-    // TODO:
+    if (nameInput.value.trim().length < 2 || nameInput.value.trim().length > 30) {
+      errName.textContent = "Name must be 2 to 30 characters";
+      return false;
+    }
+    if ((emailInput.value.trim().length === 0) || (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim()))) {
+      errEmail.textContent = "Please Enter Valid Email (example: a@b.com)";
+      return false;
+    }
+
+    // TODO: DONE
     // - Name: 2–30 characters after trim()
     // - Email: basic valid shape (example: a@b.com)
     // - Show errors in errName / errEmail
@@ -343,6 +352,13 @@
   // ======================================================
   function loadProgress() {
     // TODO: implement robust load:
+    const bestScore = localStorage.getItem('bestScore');
+    const bestTotal = localStorage.getItem('bestTotal');
+    const attempts = localStorage.getItem('attempts');
+
+    if (bestScore !== null && bestTotal !== null && attempts !== null) {
+      return { bestScore: parseInt(bestScore), bestTotal: parseInt(bestTotal), attempts: parseInt(attempts) };
+    }
     // - Return default { bestScore: 0, bestTotal: 0, attempts: 0 } if missing/invalid
     return { bestScore: 0, bestTotal: 0, attempts: 0 };
   }
