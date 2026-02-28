@@ -37,7 +37,13 @@
     main { max-width: 900px; margin: 0 auto; padding: 18px; }
     .card { background:#121b2e; border:1px solid rgba(255,255,255,0.10); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
     label { display:block; font-weight:700; margin-top: 10px; }
-    input, select {
+    input {
+      width:95%; padding:10px; border-radius: 10px;
+      border:1px solid rgba(255,255,255,0.18);
+      background:#0f172a; color:#eef2ff;
+    }
+
+    select {
       width:100%; padding:10px; border-radius: 10px;
       border:1px solid rgba(255,255,255,0.18);
       background:#0f172a; color:#eef2ff;
@@ -352,12 +358,21 @@
   // ======================================================
   function loadProgress() {
     // TODO: implement robust load:
-    const bestScore = localStorage.getItem('bestScore');
-    const bestTotal = localStorage.getItem('bestTotal');
-    const attempts = localStorage.getItem('attempts');
+    const objString = localStorage.getItem(STORAGE_KEY);
+    if (objString === null) {
+      console.log("objString is null");
+      return { bestScore: 0, bestTotal: 0, attempts: 0 };
+    }
+    //converts the entire string back into the 
+    //object with the types each variable had before they were a string
+    const obj = JSON.parse(objString); 
+
+    const bestScore = obj.bestScore
+    const bestTotal = obj.bestTotal
+    const attempts = obj.attempts
 
     if (bestScore !== null && bestTotal !== null && attempts !== null) {
-      return { bestScore: parseInt(bestScore), bestTotal: parseInt(bestTotal), attempts: parseInt(attempts) };
+      return { bestScore: bestScore, bestTotal: bestTotal, attempts: attempts };
     }
     // - Return default { bestScore: 0, bestTotal: 0, attempts: 0 } if missing/invalid
     return { bestScore: 0, bestTotal: 0, attempts: 0 };
@@ -368,6 +383,8 @@
   // ======================================================
   function saveProgress(obj) {
     // TODO: JSON.stringify + localStorage.setItem(STORAGE_KEY, ...)
+    const objString = JSON.stringify(obj); //object to string
+    localStorage.setItem(STORAGE_KEY, objString); //string to staorage
   }
 
   // ======================================================
@@ -380,7 +397,18 @@
     // - var data = await res.json()
     // - if (!data.token) throw Error(...)
     // - return data.token
-    return null;
+    var result = await fetch(API.token); //makes a request to a URL and returns a response (async)
+
+    if (!result.ok) { //check if the request succeeded
+      throw("Error fetching API token");
+    }
+
+    var data = await result.json(); //converts the API token into a usable object
+    
+    if (!data.token) { //check if the request succeeded
+      throw("Error converting API token");
+    }
+    return data.token;
   }
 
   // ======================================================
@@ -394,6 +422,25 @@
     //   0 -> return results
     //   5 -> throw rate limit error
     //   else -> throw generic error
+
+    //builds and returns a url string
+    var url = API.questionsUrl(cfg.amount, cfg.difficulty, state.player.category, state.token); 
+
+    var result = await fetch(url); //send request to the url
+
+    if (!result.ok) { //check if the request succeeded
+      throw("Error fetching API token");
+    }
+
+    var data = await result.json(); //read the response and make it an object
+
+    if (data.response_code === 0) {
+      return data.results
+    } else if (data.response_code === 5) {
+      throw("Rate Limit Error");
+    } else {
+      throw("generic error")
+    }
     return [];
   }
 
